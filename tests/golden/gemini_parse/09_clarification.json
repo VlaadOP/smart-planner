@@ -1,0 +1,13 @@
+{
+  "utterance": "Réserve du temps pour le sport",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "CLARIFY",
+        "clarification_question": "Combien de temps de sport souhaitez-vous, et à quelle fréquence (par jour ou par semaine) ?"
+      }
+    ],
+    "assistant_message": "J'ai besoin d'une précision avant de planifier le sport."
+  }
+}

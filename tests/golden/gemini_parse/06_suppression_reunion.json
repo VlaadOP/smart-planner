@@ -1,0 +1,14 @@
+{
+  "utterance": "Finalement supprime la réunion du mardi",
+  "context_note": "La table de contraintes contient meet1 | FIXED_EVENT | Réunion d'équipe",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "DELETE",
+        "target_constraint_id": "meet1"
+      }
+    ],
+    "assistant_message": "J'ai supprimé la réunion d'équipe du mardi."
+  }
+}

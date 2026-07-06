@@ -1,0 +1,26 @@
+{
+  "utterance": "3 séances de sport de 45 minutes par semaine, de préférence le matin",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "RECURRING_BUDGET",
+          "recurring_budget": {
+            "label": "Sport (3x45min/semaine)",
+            "strength": "hard",
+            "weight": 50,
+            "category": "sport",
+            "period": "WEEK",
+            "total_minutes": 135,
+            "occurrences": 3,
+            "chunk_minutes": 45,
+            "preferred_window": { "start": "07:00", "end": "12:00" }
+          }
+        }
+      }
+    ],
+    "assistant_message": "J'ai prévu 3 séances de sport de 45 minutes par semaine, de préférence le matin."
+  }
+}

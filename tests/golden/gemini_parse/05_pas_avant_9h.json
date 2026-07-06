@@ -1,0 +1,22 @@
+{
+  "utterance": "Jamais de travail avant 9h du matin",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "BLACKOUT",
+          "blackout": {
+            "label": "Pas de travail avant 9h",
+            "strength": "hard",
+            "weight": 50,
+            "windows": [{ "start": "00:00", "end": "09:00" }],
+            "applies_to": ["work", "meeting"]
+          }
+        }
+      }
+    ],
+    "assistant_message": "Compris : aucun travail ne sera planifié avant 9h."
+  }
+}

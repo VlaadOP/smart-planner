@@ -1,0 +1,24 @@
+{
+  "utterance": "1h de pause par jour",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "RECURRING_BUDGET",
+          "recurring_budget": {
+            "label": "Pause quotidienne",
+            "strength": "hard",
+            "weight": 50,
+            "category": "break",
+            "period": "DAY",
+            "total_minutes": 60,
+            "min_chunk_minutes": 15
+          }
+        }
+      }
+    ],
+    "assistant_message": "C'est noté : 1h de pause chaque jour."
+  }
+}

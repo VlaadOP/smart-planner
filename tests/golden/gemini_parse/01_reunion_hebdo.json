@@ -1,0 +1,24 @@
+{
+  "utterance": "Réunion d'équipe tous les mardis à 14h",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "FIXED_EVENT",
+          "fixed_event": {
+            "label": "Réunion d'équipe",
+            "strength": "hard",
+            "weight": 50,
+            "category": "meeting",
+            "recurrence": { "freq": "WEEKLY", "weekdays": ["TUE"] },
+            "start_time": "14:00",
+            "duration_minutes": 60
+          }
+        }
+      }
+    ],
+    "assistant_message": "J'ai ajouté la réunion d'équipe hebdomadaire du mardi à 14h (1h)."
+  }
+}

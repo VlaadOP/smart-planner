@@ -1,0 +1,26 @@
+{
+  "utterance": "J'ai 3h de rapport à finir avant vendredi, je peux le couper en morceaux d'au moins 45 minutes",
+  "context_note": "today = 2026-07-06 (lundi) ; vendredi = 2026-07-10",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "FLEXIBLE_TASK",
+          "flexible_task": {
+            "label": "Rapport",
+            "strength": "hard",
+            "weight": 50,
+            "category": "work",
+            "duration_minutes": 180,
+            "deadline": "2026-07-10",
+            "splittable": true,
+            "min_chunk_minutes": 45
+          }
+        }
+      }
+    ],
+    "assistant_message": "J'ai planifié 3h de rapport à terminer avant vendredi, fractionnables par tranches de 45 minutes minimum."
+  }
+}

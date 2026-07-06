@@ -1,0 +1,29 @@
+{
+  "utterance": "Je veux dormir 10h par nuit",
+  "context_note": "La table de contraintes contient def-sleep [DEFAULT] Sommeil (8h/nuit)",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "MODIFY",
+        "target_constraint_id": "def-sleep",
+        "constraint": {
+          "kind": "RECURRING_BUDGET",
+          "recurring_budget": {
+            "label": "Sommeil (10h/nuit)",
+            "strength": "hard",
+            "weight": 80,
+            "category": "sleep",
+            "period": "DAY",
+            "total_minutes": 600,
+            "occurrences": 1,
+            "min_chunk_minutes": 600,
+            "required_window": { "start": "21:00", "end": "10:00" },
+            "preferred_window": { "start": "22:00", "end": "08:00" }
+          }
+        }
+      }
+    ],
+    "assistant_message": "J'ai porté votre sommeil à 10h par nuit."
+  }
+}

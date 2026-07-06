@@ -1,0 +1,31 @@
+{
+  "utterance": "Supprime la réunion du mardi et ajoute 30 minutes de méditation chaque matin",
+  "context_note": "La table de contraintes contient meet1 | FIXED_EVENT | Réunion d'équipe",
+  "parse_result": {
+    "language": "fr",
+    "actions": [
+      {
+        "action": "DELETE",
+        "target_constraint_id": "meet1"
+      },
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "RECURRING_BUDGET",
+          "recurring_budget": {
+            "label": "Méditation",
+            "strength": "hard",
+            "weight": 50,
+            "category": "personal",
+            "period": "DAY",
+            "total_minutes": 30,
+            "occurrences": 1,
+            "chunk_minutes": 30,
+            "preferred_window": { "start": "06:00", "end": "10:00" }
+          }
+        }
+      }
+    ],
+    "assistant_message": "Réunion du mardi supprimée, et 30 minutes de méditation ajoutées chaque matin."
+  }
+}

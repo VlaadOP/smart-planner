@@ -1,0 +1,25 @@
+{
+  "utterance": "Add a dentist appointment on July 15th at 9:30am, 90 minutes, at the downtown clinic",
+  "parse_result": {
+    "language": "en",
+    "actions": [
+      {
+        "action": "ADD",
+        "constraint": {
+          "kind": "FIXED_EVENT",
+          "fixed_event": {
+            "label": "Dentist appointment",
+            "strength": "hard",
+            "weight": 50,
+            "category": "personal",
+            "recurrence": { "freq": "ONCE", "on_date": "2026-07-15" },
+            "start_time": "09:30",
+            "duration_minutes": 90,
+            "location": "downtown clinic"
+          }
+        }
+      }
+    ],
+    "assistant_message": "Added the dentist appointment on July 15th at 9:30 (90 min)."
+  }
+}
