@@ -2,7 +2,14 @@ from datetime import date, time
 
 from app.compiler.compile import compile_constraints
 from app.defaults.realism import default_constraints
-from app.schemas.ir import FixedEvent, FlexibleTask, Recurrence, Weekday
+from app.schemas.ir import (
+    ActivityCategory,
+    FixedEvent,
+    FlexibleTask,
+    Recurrence,
+    RecurringBudget,
+    Weekday,
+)
 from app.solver.solve import run_solve
 from app.solver.validate import validate_schedule
 
@@ -55,6 +62,32 @@ def test_determinism(grid, cfg):
     s1 = run_solve(cm, grid, cfg).schedule
     s2 = run_solve(cm, grid, cfg).schedule
     assert [(b.key, b.start, b.end) for b in s1.blocks] == [(b.key, b.start, b.end) for b in s2.blocks]
+
+
+def test_weekly_sessions_spread_across_days(grid, cfg):
+    # "3x45 min de sport par semaine" ne doit pas atterrir 3x le même jour ni
+    # en pleine nuit (régression : tout était empilé le lundi à 00:00).
+    sport = RecurringBudget(
+        id="sport",
+        source_request_id="r-sport",
+        label="Sport",
+        category=ActivityCategory.SPORT,
+        period="WEEK",
+        total_minutes=135,
+        occurrences=3,
+        chunk_minutes=45,
+    )
+    cm = compile_constraints(default_constraints() + [sport], grid)
+    outcome = run_solve(cm, grid, cfg)
+    assert outcome.status in ("OPTIMAL", "FEASIBLE")
+    assert validate_schedule(outcome.schedule, cm, grid) == []
+
+    blocks = [b for b in outcome.schedule.blocks if b.constraint_id == "sport"]
+    # Première semaine (jours 0-6) : 3 séances sur 3 dates distinctes, hors nuit.
+    week1 = [b for b in blocks if (b.start.date() - date(2026, 7, 6)).days < 7]
+    assert len(week1) == 3
+    assert len({b.start.date() for b in week1}) == 3
+    assert all(b.start.time() >= time(7, 0) for b in week1)
 
 
 def test_realism_defaults_present(grid, cfg):

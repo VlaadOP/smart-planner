@@ -83,9 +83,16 @@ def default_constraints() -> list[AnyConstraint]:
             is_default=True,
             strength=Strength.SOFT,
             weight=60,
-            label="Pas de travail la nuit",
+            label="Pas d'activité en pleine nuit",
             windows=[TimeWindow(start="00:00", end="07:00")],
-            applies_to=[ActivityCategory.WORK, ActivityCategory.MEETING],
+            # Sport/perso inclus : par défaut on ne place pas une séance à 3h du
+            # matin. Sommeil et repas gardent évidemment le droit d'y être.
+            applies_to=[
+                ActivityCategory.WORK,
+                ActivityCategory.MEETING,
+                ActivityCategory.SPORT,
+                ActivityCategory.PERSONAL,
+            ],
         ),
         MaxStretch(
             id="def-stretch",

@@ -73,6 +73,9 @@ class GroupSpec:
     target_slots: int | None = None  # somme des tailles présentes == target
     exact_count: int | None = None  # nombre de chunks présents == n
     ordered: bool = True  # chaîne anti-symétrie start_{i+1} >= end_i
+    # Écart minimal (slots) souhaité entre deux occurrences consécutives, appliqué
+    # en soft : > 0 pousse à répartir les séances sur des jours distincts.
+    min_start_gap: int = 0
 
 
 @dataclass
@@ -332,6 +335,10 @@ def _compile_budget(cm: CompiledModel, c: RecurringBudget, grid: TimeGrid) -> No
                     preferred=preferred,
                 )
             )
+        # Budget hebdomadaire à plusieurs occurrences : on veut des jours distincts
+        # (ex. 3x sport/semaine != 3x le lundi). Les budgets quotidiens gardent
+        # min_start_gap=0 (plusieurs occurrences le même jour est le cas normal).
+        min_start_gap = SLOTS_PER_DAY if (c.period == "WEEK" and k > 1) else 0
         cm.groups.append(
             GroupSpec(
                 group_id=group_id,
@@ -344,6 +351,7 @@ def _compile_budget(cm: CompiledModel, c: RecurringBudget, grid: TimeGrid) -> No
                 chunk_keys=keys,
                 target_slots=p_total,
                 exact_count=exact_count,
+                min_start_gap=min_start_gap,
             )
         )
 

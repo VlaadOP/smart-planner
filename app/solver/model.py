@@ -156,6 +156,14 @@ def build_model(
             for a, b in zip(cvs, cvs[1:]):
                 m.AddImplication(b.presence, a.presence)
                 m.Add(b.start >= a.start + a.size).OnlyEnforceIf([a.presence, b.presence])
+                if g.min_start_gap:
+                    # Soft : soit b démarre >= min_start_gap après a (jours distincts),
+                    # soit on paie spread_penalty. Sans effet si l'un est absent.
+                    far = m.NewBoolVar(f"{b.spec.key}:spread")
+                    m.Add(b.start >= a.start + g.min_start_gap).OnlyEnforceIf(far)
+                    crammed = m.NewBoolVar(f"{b.spec.key}:crammed")
+                    m.AddBoolOr([far, a.presence.Not(), b.presence.Not(), crammed])
+                    obj.append(cfg.spread_penalty * crammed)
 
     # --- Blackouts ---
     for bo in cm.blackouts:

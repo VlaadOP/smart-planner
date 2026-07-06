@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     tier_default_soft: int = 10
     stability_weight: int = 20
     pref_window_weight: int = 1
+    # Pénalité par paire d'occurrences d'un même budget hebdomadaire placées à
+    # moins de 24 h l'une de l'autre : pousse à étaler (ex. sport) sur la semaine.
+    spread_penalty: int = 300
 
     sessions_dir: Path = BASE_DIR / "sessions"
 
