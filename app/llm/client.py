@@ -16,6 +16,27 @@ from app.config import Settings
 T = TypeVar("T", bound=BaseModel)
 
 
+def _gemini_schema(schema: type[BaseModel]) -> dict:
+    """JSON Schema Pydantic nettoyé des mots-clés que ``types.Schema`` (sous-ensemble
+    OpenAPI 3.0 de Gemini) rejette. ``multiple_of`` reste appliqué côté serveur par la
+    re-validation Pydantic ; on le retire seulement du contrat envoyé au modèle."""
+    unsupported = {"multipleOf"}
+
+    def strip(node: object) -> None:
+        if isinstance(node, dict):
+            for key in unsupported:
+                node.pop(key, None)
+            for value in node.values():
+                strip(value)
+        elif isinstance(node, list):
+            for value in node:
+                strip(value)
+
+    js = schema.model_json_schema()
+    strip(js)
+    return js
+
+
 class LLMError(Exception):
     """Le LLM n'a pas produit de sortie valide après réparation."""
 
@@ -36,6 +57,7 @@ class GeminiClient:
     def structured(self, system: str, user: str, schema: type[T], repair_attempts: int = 1) -> T:
         from google.genai import types
 
+        response_schema = _gemini_schema(schema)
         contents = user
         last_error: Exception | None = None
         for _ in range(repair_attempts + 1):
@@ -45,7 +67,7 @@ class GeminiClient:
                 config=types.GenerateContentConfig(
                     system_instruction=system,
                     response_mime_type="application/json",
-                    response_schema=schema,
+                    response_schema=response_schema,
                     temperature=0.2,
                 ),
             )
