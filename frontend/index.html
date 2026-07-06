@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Planner</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+</head>
+<body>
+  <div id="layout">
+    <aside id="sidebar">
+      <header id="sidebar-header">
+        <h1>Smart Planner</h1>
+        <div id="toolbar">
+          <button id="btn-export" title="Exporter le planning validé en .ics">Exporter .ics</button>
+          <button id="btn-new-session" title="Repartir de zéro">Nouvelle session</button>
+        </div>
+        <div id="status-line"></div>
+      </header>
+
+      <div id="conflict-banner" class="hidden">
+        <div id="conflict-text"></div>
+        <div id="conflict-proposals"></div>
+      </div>
+
+      <section id="chat">
+        <div id="chat-messages"></div>
+        <form id="chat-form" autocomplete="off">
+          <input id="chat-input" type="text"
+                 placeholder="Ex : 1h de pause par jour, réunion mardi à 14h…" />
+          <button type="submit" id="chat-send">Envoyer</button>
+        </form>
+      </section>
+
+      <section id="constraints">
+        <h2>Contraintes</h2>
+        <ul id="constraint-list"></ul>
+      </section>
+    </aside>
+
+    <main id="calendar-wrap">
+      <div id="calendar"></div>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

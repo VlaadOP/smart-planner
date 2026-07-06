@@ -2,7 +2,7 @@ from datetime import date
 
 from app.compiler.compile import compile_constraints
 from app.defaults.realism import default_constraints
-from app.schemas.ir import FixedEvent, FlexibleTask, Recurrence, Weekday
+from app.schemas.ir import FixedEvent, FlexibleTask, Recurrence
 from app.solver.solve import run_solve
 
 

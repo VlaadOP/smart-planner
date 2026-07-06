@@ -1,0 +1,74 @@
+{
+  "context": "Conflit : sommeil 12h/nuit (req-001) + travail 14h/jour (req-002)",
+  "report": {
+    "explanation": "Vos demandes sont incompatibles : 12h de sommeil + 14h de travail = 26h, soit plus que les 24h d'une journée — sans compter les repas. Il faut réduire l'une des deux quantités.",
+    "conflicting_request_ids": ["req-001", "req-002"],
+    "proposals": [
+      {
+        "description": "Réduire le sommeil à 8h par nuit",
+        "patch": [
+          {
+            "action": "MODIFY",
+            "target_constraint_id": "sleep-1",
+            "constraint": {
+              "kind": "RECURRING_BUDGET",
+              "recurring_budget": {
+                "label": "Sommeil (8h/nuit)",
+                "strength": "hard",
+                "weight": 80,
+                "category": "sleep",
+                "period": "DAY",
+                "total_minutes": 480,
+                "occurrences": 1,
+                "min_chunk_minutes": 480,
+                "required_window": { "start": "21:00", "end": "10:00" }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "description": "Réduire le travail à 10h par jour",
+        "patch": [
+          {
+            "action": "MODIFY",
+            "target_constraint_id": "work-1",
+            "constraint": {
+              "kind": "RECURRING_BUDGET",
+              "recurring_budget": {
+                "label": "Travail (10h/jour)",
+                "strength": "hard",
+                "weight": 50,
+                "category": "work",
+                "period": "DAY",
+                "total_minutes": 600,
+                "min_chunk_minutes": 60
+              }
+            }
+          }
+        ]
+      },
+      {
+        "description": "Rendre le travail flexible (objectif souple) plutôt qu'obligatoire",
+        "patch": [
+          {
+            "action": "MODIFY",
+            "target_constraint_id": "work-1",
+            "constraint": {
+              "kind": "RECURRING_BUDGET",
+              "recurring_budget": {
+                "label": "Travail (14h/jour, souple)",
+                "strength": "soft",
+                "weight": 70,
+                "category": "work",
+                "period": "DAY",
+                "total_minutes": 840,
+                "min_chunk_minutes": 60
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
