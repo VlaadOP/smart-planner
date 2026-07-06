@@ -90,6 +90,39 @@ def test_weekly_sessions_spread_across_days(grid, cfg):
     assert all(b.start.time() >= time(7, 0) for b in week1)
 
 
+def test_awake_activities_avoid_deep_night(grid, cfg):
+    # Régression : pauses (BREAK) et tâches génériques (OTHER) atterrissaient à
+    # 00:00 car le repos nocturne ne couvrait que work/meeting/sport/perso.
+    extra = [
+        RecurringBudget(
+            id="pause",
+            source_request_id="r-pause",
+            label="Pause",
+            category=ActivityCategory.BREAK,
+            period="DAY",
+            total_minutes=60,
+            min_chunk_minutes=15,
+        ),
+        FlexibleTask(
+            id="divers",
+            source_request_id="r-divers",
+            label="Projet divers",
+            category=ActivityCategory.OTHER,
+            duration_minutes=480,
+            splittable=True,
+            min_chunk_minutes=120,
+            deadline=date(2026, 7, 12),
+        ),
+    ]
+    cm = compile_constraints(default_constraints() + extra, grid)
+    outcome = run_solve(cm, grid, cfg)
+    assert outcome.status in ("OPTIMAL", "FEASIBLE")
+    assert validate_schedule(outcome.schedule, cm, grid) == []
+    awake = [b for b in outcome.schedule.blocks if b.constraint_id in {"pause", "divers"}]
+    assert awake  # les blocs existent bien
+    assert all(b.start.time() >= time(6, 0) for b in awake)
+
+
 def test_realism_defaults_present(grid, cfg):
     cm = compile_constraints(default_constraints(), grid)
     outcome = run_solve(cm, grid, cfg)

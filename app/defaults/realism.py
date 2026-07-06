@@ -17,6 +17,12 @@ from app.schemas.ir import (
     TimeWindow,
 )
 
+# Catégories « éveillées » : tout ce qui n'a pas vocation à se dérouler en pleine
+# nuit. On raisonne par exclusion (sommeil + repas seuls autorisés la nuit) plutôt
+# que par liste blanche, pour qu'une nouvelle catégorie soit couverte par défaut.
+_NIGHT_ALLOWED = {ActivityCategory.SLEEP, ActivityCategory.MEAL}
+AWAKE_CATEGORIES = [c for c in ActivityCategory if c not in _NIGHT_ALLOWED]
+
 
 def default_constraints() -> list[AnyConstraint]:
     return [
@@ -85,14 +91,9 @@ def default_constraints() -> list[AnyConstraint]:
             weight=60,
             label="Pas d'activité en pleine nuit",
             windows=[TimeWindow(start="00:00", end="07:00")],
-            # Sport/perso inclus : par défaut on ne place pas une séance à 3h du
-            # matin. Sommeil et repas gardent évidemment le droit d'y être.
-            applies_to=[
-                ActivityCategory.WORK,
-                ActivityCategory.MEETING,
-                ActivityCategory.SPORT,
-                ActivityCategory.PERSONAL,
-            ],
+            # Toute activité éveillée : par défaut on ne place ni sport, ni pause,
+            # ni tâche à 3h du matin. Sommeil et repas gardent le droit d'y être.
+            applies_to=AWAKE_CATEGORIES,
         ),
         MaxStretch(
             id="def-stretch",
