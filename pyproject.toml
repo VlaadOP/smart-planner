@@ -1,0 +1,40 @@
+[project]
+name = "smart-planner"
+version = "0.1.0"
+description = "Planificateur mensuel intelligent : langage naturel -> contraintes -> CP-SAT -> calendrier"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "ortools>=9.10",
+    "google-genai>=1.0",
+    "icalendar>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = { include = ["app*"] } }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: tests calling the real Gemini API (require GEMINI_API_KEY)",
+]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
