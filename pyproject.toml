@@ -2,7 +2,7 @@
 name = "smart-planner"
 version = "0.1.0"
 description = "Planificateur mensuel intelligent : langage naturel -> contraintes -> CP-SAT -> calendrier"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
@@ -37,4 +37,4 @@ addopts = "-m 'not live'"
 
 [tool.ruff]
 line-length = 110
-target-version = "py313"
+target-version = "py311"

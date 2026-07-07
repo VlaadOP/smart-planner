@@ -43,18 +43,48 @@ langage naturel ──> Gemini (sortie structurée) ──> IR Pydantic ──> 
   (sessions JSON sur disque) ; seul `POST /export` produit un artefact externe
   (`.ics` avec UIDs déterministes — un ré-import met à jour au lieu de dupliquer).
 
-## Installation
+## Démarrage rapide
+
+Prérequis : **Python ≥ 3.11** et **git**. Il faut aussi une **clé API Gemini**
+(gratuite) : créez-la en 30 s sur https://aistudio.google.com/apikey.
+
+### 1. Récupérer le code
+
+```bash
+git clone https://github.com/<votre-user>/smart-planner.git
+cd smart-planner
+```
+
+### 2. Installer
+
+<details open>
+<summary><b>macOS / Linux</b></summary>
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+cp .env.example .env          # puis ouvrez .env et collez votre clé
+```
+</details>
+
+<details>
+<summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-copy .env.example .env    # puis renseigner GEMINI_API_KEY
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+copy .env.example .env         # puis ouvrez .env et collez votre clé
 ```
+</details>
 
-## Lancement
+Dans `.env`, remplacez `votre-cle-api-gemini` par votre clé Gemini.
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
+### 3. Lancer
+
+```bash
+uvicorn app.main:app --port 8000
 ```
 
 Ouvrez http://127.0.0.1:8000 : chat à gauche, calendrier FullCalendar
@@ -62,11 +92,15 @@ Ouvrez http://127.0.0.1:8000 : chat à gauche, calendrier FullCalendar
 en vert, les blocs déplacés en orange. En cas de conflit, une bannière explique
 les requêtes bloquantes et propose des compromis cliquables.
 
+> Une fois le venv activé (`source .venv/bin/activate` ou `Activate.ps1`), les
+> commandes `python`, `pip`, `uvicorn` et `pytest` pointent vers le venv — pas
+> besoin de préfixer par le chemin complet.
+
 ## Tests
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest              # offline (LLM mocké/goldens)
-.\.venv\Scripts\python.exe -m pytest -m live      # smoke test Gemini réel (clé requise)
+```bash
+pytest              # offline (LLM mocké/goldens) — aucune clé requise
+pytest -m live      # smoke test Gemini réel (clé requise)
 ```
 
 - Le planning est vérifié par un **validateur indépendant du solveur**
