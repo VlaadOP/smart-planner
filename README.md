@@ -1,61 +1,60 @@
 # Smart Planner
 
-Planificateur mensuel intelligent pour une personne : vous décrivez vos
-contraintes en langage naturel (« 1h de pause par jour », « réunion fixe mardi à
-14h », « 10h de sommeil »), un LLM les traduit en contraintes structurées, un
-solveur d'optimisation construit un planning en **blocs de 15 minutes sur 30
-jours glissants**, et vous validez le résultat avant de l'exporter en `.ics`.
+Smart monthly planner for a single person: you describe your constraints in
+natural language ("1h break per day", "fixed meeting Tuesday at 2pm", "10h of
+sleep"), an LLM translates them into structured constraints, an optimization
+solver builds a schedule in **15-minute blocks over a 30-day rolling window**,
+and you validate the result before exporting it to `.ics`.
 
 ## Architecture
 
 ```
-langage naturel ──> Gemini (sortie structurée) ──> IR Pydantic ──> compilateur ──> CP-SAT
-                                                        ▲                            │
-                    explication + compromis <── cœur unsat (assomptions) <── INFEASIBLE
-                                                                              │
-                          FastAPI + FullCalendar (validation) <── planning ◄──┘
-                                       │
-                                  export .ics
+natural language ──> Gemini (structured output) ──> Pydantic IR ──> compiler ──> CP-SAT
+                                                        ▲                          │
+              explanation + trade-offs <── unsat core (assumptions) <── INFEASIBLE
+                                                                            │
+                       FastAPI + FullCalendar (validation) <── schedule ◄──┘
+                                     │
+                                 .ics export
 ```
 
-- **IR de contraintes** (`app/schemas/ir.py`) : 6 types — FixedEvent,
-  FlexibleTask, RecurringBudget, Blackout, BufferRule, MaxStretch — en heure
-  humaine (« HH:MM » alignés 15 min). C'est le seul pont entre le LLM et le
-  solveur : `app/llm` n'importe jamais OR-Tools, `app/solver` n'importe jamais
-  le SDK Gemini.
-- **Frontière Gemini** (`app/schemas/actions.py`) : enveloppe plate (pas
-  d'`anyOf`), re-validation Pydantic systématique + boucle de réparation.
-  Actions ADD / MODIFY / DELETE / CLARIFY — le parseur reçoit la table des
-  contraintes courantes et cible les ids réels (« finalement supprime la
-  réunion de mardi »).
-- **Solveur** (`app/solver/`) : CP-SAT, intervalles optionnels + `NoOverlap`
-  global (~150–400 intervalles après expansion des récurrences). Objectif à
-  paliers : soft utilisateur ≫ défauts de réalisme ≫ stabilité (blocs déplacés
-  vs solution précédente) ≫ fenêtres préférées. Re-solves < 1 s grâce aux hints.
-- **Infaisabilité** : littéraux d'assomption par requête utilisateur → cœur
-  unsat rétréci par deletion-filtering → explication Gemini en langage naturel
-  avec 2-3 compromis applicables en un clic. Le dernier planning faisable reste
-  affiché : le système ne crashe jamais.
-- **Réalisme par défaut** (`app/defaults/realism.py`) : sommeil 8h/nuit, repas,
-  pas de travail nocturne, max 4h de travail d'affilée, repos le week-end —
-  tous SOFT et surchargeables d'une phrase.
-- **Validation avant export** : le solveur et le LLM opèrent en isolation
-  (sessions JSON sur disque) ; seul `POST /export` produit un artefact externe
-  (`.ics` avec UIDs déterministes — un ré-import met à jour au lieu de dupliquer).
+- **Constraint IR** (`app/schemas/ir.py`): 6 types — FixedEvent, FlexibleTask,
+  RecurringBudget, Blackout, BufferRule, MaxStretch — in human time ("HH:MM"
+  aligned to 15 min). It's the only bridge between the LLM and the solver:
+  `app/llm` never imports OR-Tools, `app/solver` never imports the Gemini SDK.
+- **Gemini boundary** (`app/schemas/actions.py`): flat envelope (no `anyOf`),
+  systematic Pydantic re-validation + repair loop. ADD / MODIFY / DELETE /
+  CLARIFY actions — the parser receives the table of current constraints and
+  targets real ids ("actually, delete Tuesday's meeting"). The assistant always
+  replies in English (French or English input is understood).
+- **Solver** (`app/solver/`): CP-SAT, optional intervals + a global `NoOverlap`
+  (~150–400 intervals after recurrence expansion). Tiered objective: user soft
+  ≫ realism defaults ≫ stability (blocks moved vs previous solution) ≫ preferred
+  windows. Re-solves < 1 s thanks to hints.
+- **Infeasibility**: per-request assumption literals → unsat core shrunk by
+  deletion-filtering → natural-language Gemini explanation with 2-3 one-click
+  trade-offs. The last feasible schedule stays on screen: the system never
+  crashes.
+- **Realism defaults** (`app/defaults/realism.py`): 8h sleep/night, meals, no
+  night work, max 4h of work in a row, weekend rest — all SOFT and overridable
+  with a single sentence.
+- **Validation before export**: the solver and the LLM operate in isolation
+  (JSON sessions on disk); only `POST /export` produces an external artifact
+  (`.ics` with deterministic UIDs — re-importing updates instead of duplicating).
 
-## Démarrage rapide
+## Quick start
 
-Prérequis : **Python ≥ 3.11** et **git**. Il faut aussi une **clé API Gemini**
-(gratuite) : créez-la en 30 s sur https://aistudio.google.com/apikey.
+Requirements: **Python ≥ 3.11** and **git**. You also need a **Gemini API key**
+(free): create one in 30 s at https://aistudio.google.com/apikey.
 
-### 1. Récupérer le code
+### 1. Get the code
 
 ```bash
-git clone https://github.com/<votre-user>/smart-planner.git
+git clone https://github.com/<your-user>/smart-planner.git
 cd smart-planner
 ```
 
-### 2. Installer
+### 2. Install
 
 <details open>
 <summary><b>macOS / Linux</b></summary>
@@ -64,7 +63,7 @@ cd smart-planner
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-cp .env.example .env          # puis ouvrez .env et collez votre clé
+cp .env.example .env          # then open .env and paste your key
 ```
 </details>
 
@@ -75,54 +74,54 @@ cp .env.example .env          # puis ouvrez .env et collez votre clé
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
-copy .env.example .env         # puis ouvrez .env et collez votre clé
+copy .env.example .env         # then open .env and paste your key
 ```
 </details>
 
-Dans `.env`, remplacez `votre-cle-api-gemini` par votre clé Gemini.
+In `.env`, replace `your-gemini-api-key` with your Gemini key.
 
-### 3. Lancer
+### 3. Run
 
 ```bash
 uvicorn app.main:app --port 8000
 ```
 
-Ouvrez http://127.0.0.1:8000 : chat à gauche, calendrier FullCalendar
-(mois/semaine/jour, granularité 15 min) à droite. Les blocs ajoutés clignotent
-en vert, les blocs déplacés en orange. En cas de conflit, une bannière explique
-les requêtes bloquantes et propose des compromis cliquables.
+Open http://127.0.0.1:8000: chat on the left, a FullCalendar view
+(month/week/day, 15-min granularity) on the right. Added blocks flash green,
+moved blocks flash orange. On a conflict, a banner explains the blocking
+requests and proposes clickable trade-offs.
 
-> Une fois le venv activé (`source .venv/bin/activate` ou `Activate.ps1`), les
-> commandes `python`, `pip`, `uvicorn` et `pytest` pointent vers le venv — pas
-> besoin de préfixer par le chemin complet.
+> Once the venv is activated (`source .venv/bin/activate` or `Activate.ps1`),
+> the `python`, `pip`, `uvicorn` and `pytest` commands point to the venv — no
+> need to prefix them with the full path.
 
 ## Tests
 
 ```bash
-pytest              # offline (LLM mocké/goldens) — aucune clé requise
-pytest -m live      # smoke test Gemini réel (clé requise)
+pytest              # offline (LLM mocked/goldens) — no key required
+pytest -m live      # real Gemini smoke test (key required)
 ```
 
-- Le planning est vérifié par un **validateur indépendant du solveur**
+- The schedule is checked by a **solver-independent validator**
   (`app/solver/validate.py`).
-- Les solves de test sont déterministes (1 worker, seed fixe).
-- Les golden tests (`tests/golden/`) épinglent le contrat LLM ↔ serveur ;
-  `scripts/record_goldens.py` ré-enregistre des sorties Gemini réelles.
+- Test solves are deterministic (1 worker, fixed seed).
+- Golden tests (`tests/golden/`) pin the LLM ↔ server contract;
+  `scripts/record_goldens.py` re-records real Gemini outputs.
 
 ## API
 
-| Endpoint | Rôle |
+| Endpoint | Role |
 |---|---|
-| `POST /api/sessions` | crée une session (défauts de réalisme + solve initial) |
-| `POST /api/sessions/{id}/chat` | message NL → parse → merge → re-solve → planning + diff |
-| `GET /api/sessions/{id}` / `.../schedule` / `.../constraints` | lecture |
-| `DELETE /api/sessions/{id}/constraints/{cid}` | désactive une contrainte + re-solve |
-| `POST /api/sessions/{id}/relaxations/{n}/accept` | applique un compromis proposé |
-| `POST /api/sessions/{id}/export` | valide et télécharge le `.ics` (`?include_defaults=true` pour inclure sommeil/repas) |
+| `POST /api/sessions` | create a session (realism defaults + initial solve) |
+| `POST /api/sessions/{id}/chat` | NL message → parse → merge → re-solve → schedule + diff |
+| `GET /api/sessions/{id}` / `.../schedule` / `.../constraints` | read |
+| `DELETE /api/sessions/{id}/constraints/{cid}` | deactivate a constraint + re-solve |
+| `POST /api/sessions/{id}/relaxations/{n}/accept` | apply a proposed trade-off |
+| `POST /api/sessions/{id}/export` | validate and download the `.ics` (`?include_defaults=true` to include sleep/meals) |
 
-## Limites connues (v1)
+## Known limitations (v1)
 
-- Fenêtre glissante ancrée à la création de session (pas de re-ancrage quotidien).
-- Tampon trajet appliqué à tout événement localisé (pas de distinction « même lieu »).
-- `MaxStretch` encodé en v1 simplifiée (plafond de taille + écart entre blocs de même catégorie).
-- Export Google Calendar API : non inclus (l'interface `app/export/base.py` est prête).
+- Sliding window anchored at session creation (no daily re-anchoring).
+- Travel buffer applied to every located event (no "same location" distinction).
+- `MaxStretch` encoded in a simplified v1 (size cap + gap between blocks of the same category).
+- Google Calendar API export: not included (the `app/export/base.py` interface is ready).
