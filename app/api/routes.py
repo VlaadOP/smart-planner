@@ -7,7 +7,7 @@ from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from app.llm.client import LLMError
+from app.llm.client import LLMError, LLMUnavailableError
 from app.schemas.api import (
     ChatRequest,
     ChatResponse,
@@ -107,6 +107,11 @@ async def chat(request: Request, session_id: str, body: ChatRequest):
         loop = asyncio.get_running_loop()
         try:
             parse_result = await loop.run_in_executor(None, deps.parse_fn, state, body.message)
+        except LLMUnavailableError as e:
+            msg = f"⚠️ {e}"
+            state.chat_history.append(ChatTurn(who="assistant", text=msg))
+            deps.store.save(state)
+            return _chat_response(state, msg)
         except LLMError as e:
             msg = f"I couldn't interpret the request: {e}"
             state.chat_history.append(ChatTurn(who="assistant", text=msg))

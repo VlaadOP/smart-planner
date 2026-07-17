@@ -7,6 +7,7 @@ unique retry renvoie l'erreur exacte au modèle pour correction.
 """
 from __future__ import annotations
 
+import time
 from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
@@ -41,6 +42,15 @@ class LLMError(Exception):
     """Le LLM n'a pas produit de sortie valide après réparation."""
 
 
+class LLMUnavailableError(LLMError):
+    """Le fournisseur Gemini est temporairement indisponible (503) ou limité
+    (429) : erreur transitoire côté service, distincte d'une faute utilisateur."""
+
+
+# Codes HTTP Gemini considérés comme transitoires (on retente avant d'abandonner).
+_TRANSIENT_CODES = {429, 500, 503}
+
+
 class GeminiClient:
     def __init__(self, cfg: Settings):
         if not cfg.gemini_api_key:
@@ -54,23 +64,46 @@ class GeminiClient:
         self._client = genai.Client(api_key=cfg.gemini_api_key)
         self._model = cfg.gemini_model
 
-    def structured(self, system: str, user: str, schema: type[T], repair_attempts: int = 1) -> T:
+    def _generate(self, system: str, contents: str, response_schema: dict, api_attempts: int = 3):
+        """Appel Gemini avec retry sur erreurs transitoires (pics de charge 503).
+        Épuise les tentatives puis lève LLMUnavailableError — jamais un 500 brut."""
+        from google.genai import errors as genai_errors
         from google.genai import types
 
+        delay = 2.0
+        for attempt in range(api_attempts):
+            try:
+                return self._client.models.generate_content(
+                    model=self._model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                        response_mime_type="application/json",
+                        response_schema=response_schema,
+                        temperature=0.2,
+                    ),
+                )
+            except genai_errors.APIError as e:
+                code = getattr(e, "code", None)
+                if code in _TRANSIENT_CODES and attempt < api_attempts - 1:
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
+                if code in (429, 503):
+                    raise LLMUnavailableError(
+                        "The AI service is busy right now (high demand). "
+                        "Please wait a few seconds and try again."
+                    ) from e
+                raise LLMUnavailableError(
+                    f"The AI service returned an error (code {code}). Please try again."
+                ) from e
+
+    def structured(self, system: str, user: str, schema: type[T], repair_attempts: int = 1) -> T:
         response_schema = _gemini_schema(schema)
         contents = user
         last_error: Exception | None = None
         for _ in range(repair_attempts + 1):
-            response = self._client.models.generate_content(
-                model=self._model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                    response_mime_type="application/json",
-                    response_schema=response_schema,
-                    temperature=0.2,
-                ),
-            )
+            response = self._generate(system, contents, response_schema)
             raw = response.text or ""
             try:
                 return schema.model_validate_json(raw)
