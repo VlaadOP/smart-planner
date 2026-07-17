@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,8 +14,8 @@
       <header id="sidebar-header">
         <h1>Smart Planner</h1>
         <div id="toolbar">
-          <button id="btn-export" title="Exporter le planning validé en .ics">Exporter .ics</button>
-          <button id="btn-new-session" title="Repartir de zéro">Nouvelle session</button>
+          <button id="btn-export" title="Export the validated schedule as .ics">Export .ics</button>
+          <button id="btn-new-session" title="Start over">New session</button>
         </div>
         <div id="status-line"></div>
       </header>
@@ -29,13 +29,13 @@
         <div id="chat-messages"></div>
         <form id="chat-form" autocomplete="off">
           <input id="chat-input" type="text"
-                 placeholder="Ex : 1h de pause par jour, réunion mardi à 14h…" />
-          <button type="submit" id="chat-send">Envoyer</button>
+                 placeholder="e.g. 1h break per day, meeting Tuesday at 2pm…" />
+          <button type="submit" id="chat-send">Send</button>
         </form>
       </section>
 
       <section id="constraints">
-        <h2>Contraintes</h2>
+        <h2>Constraints</h2>
         <ul id="constraint-list"></ul>
       </section>
     </aside>

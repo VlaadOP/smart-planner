@@ -421,7 +421,7 @@ def compile_constraints(constraints: list[AnyConstraint], grid: TimeGrid, max_ch
 
     if len(cm.chunks) > max_chunks:
         raise ModelTooLargeError(
-            f"Le planning contient trop de blocs à placer ({len(cm.chunks)} > {max_chunks}). "
-            "Réduisez le nombre de tâches fractionnées ou de budgets récurrents."
+            f"The schedule has too many blocks to place ({len(cm.chunks)} > {max_chunks}). "
+            "Reduce the number of splittable tasks or recurring budgets."
         )
     return cm

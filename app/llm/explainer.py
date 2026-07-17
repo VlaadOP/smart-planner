@@ -50,8 +50,8 @@ def explain_infeasibility(
         + "\n\n".join(sections)
         + "\n\n"
         + capacity_summary(cm)
-        + "\n\nExplain the conflict and propose 2-3 relaxations. Respond in the "
-        "language of the user's requests above."
+        + "\n\nExplain the conflict and propose 2-3 relaxations. Always respond "
+        "in English."
     )
     report = client.structured(EXPLAINER_SYSTEM, user, InfeasibilityReport)
     # Le modèle doit renvoyer les ids qu'on lui a donnés ; on force la vérité côté serveur.

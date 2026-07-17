@@ -52,10 +52,10 @@ def fallback_explanation(state: SessionState, core: list[str], cm: CompiledModel
     for rid in core:
         utterance = state.request_log.get(rid)
         labels = ", ".join(cm.request_labels.get(rid, [])) or rid
-        lines.append(f"« {utterance} » ({labels})" if utterance else labels)
+        lines.append(f"“{utterance}” ({labels})" if utterance else labels)
     explanation = (
-        "Ces demandes sont incompatibles entre elles : " + " ; ".join(lines) + ". "
-        "Assouplissez ou supprimez l'une d'entre elles pour débloquer le planning."
+        "These requests are incompatible with each other: " + "; ".join(lines) + ". "
+        "Relax or remove one of them to unblock the schedule."
     )
     return InfeasibilityReport(explanation=explanation, conflicting_request_ids=core, proposals=[])
 
@@ -98,8 +98,8 @@ def resolve(
     # UNKNOWN / MODEL_INVALID : on garde le dernier planning faisable.
     state.last_infeasibility = InfeasibilityReport(
         explanation=(
-            "Le solveur n'a pas trouvé de solution dans le temps imparti. "
-            "Le dernier planning valide est conservé."
+            "The solver did not find a solution within the time limit. "
+            "The last valid schedule is kept."
         ),
         conflicting_request_ids=[],
         proposals=[],

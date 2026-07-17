@@ -169,7 +169,7 @@ def test_delete_constraint_and_export(client_and_stub):
     assert "BEGIN:VCALENDAR" in body
     assert "Rdv dentiste" in body
     # Les blocs par défaut (sommeil...) ne sont pas exportés par défaut
-    assert "Sommeil" not in body
+    assert "Sleep" not in body
 
     constraints = client.get(f"/api/sessions/{sid}/constraints").json()
     cid = next(c["id"] for c in constraints if c["label"] == "Rdv dentiste")

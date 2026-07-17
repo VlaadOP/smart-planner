@@ -34,7 +34,7 @@ def apply_actions(state: SessionState, actions: list[ConstraintAction], source_r
         idx = by_id.get(action.target_constraint_id or "")
         if idx is None:
             result.errors.append(
-                f"Contrainte introuvable : {action.target_constraint_id!r} (action {action.action.value})"
+                f"Constraint not found: {action.target_constraint_id!r} (action {action.action.value})"
             )
             continue
         old = state.constraints[idx]

@@ -45,7 +45,7 @@ class GeminiClient:
     def __init__(self, cfg: Settings):
         if not cfg.gemini_api_key:
             raise LLMError(
-                "GEMINI_API_KEY manquante : ajoutez-la dans le fichier .env à la racine du projet."
+                "GEMINI_API_KEY missing: add it to the .env file at the project root."
             )
         # Import paresseux : le reste de l'app (solveur, tests) ne dépend pas du SDK.
         from google import genai
@@ -81,4 +81,4 @@ class GeminiClient:
                     f"Output was:\n{raw}\n\nValidation errors:\n{e}\n\n"
                     "Emit a corrected JSON object only, matching the schema exactly."
                 )
-        raise LLMError(f"Sortie Gemini invalide après réparation : {last_error}")
+        raise LLMError(f"Invalid Gemini output after repair: {last_error}")

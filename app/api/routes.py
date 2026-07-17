@@ -108,7 +108,7 @@ async def chat(request: Request, session_id: str, body: ChatRequest):
         try:
             parse_result = await loop.run_in_executor(None, deps.parse_fn, state, body.message)
         except LLMError as e:
-            msg = f"Je n'ai pas pu interpréter la demande : {e}"
+            msg = f"I couldn't interpret the request: {e}"
             state.chat_history.append(ChatTurn(who="assistant", text=msg))
             deps.store.save(state)
             return _chat_response(state, msg)
@@ -142,7 +142,7 @@ async def delete_constraint(request: Request, session_id: str, constraint_id: st
         target.active = False
         _, diff = await _resolve_async(request, state)
         deps.store.save(state)
-        return _chat_response(state, f"Contrainte « {target.label} » supprimée.", diff)
+        return _chat_response(state, f"Constraint “{target.label}” deleted.", diff)
 
 
 @router.post("/sessions/{session_id}/relaxations/{index}/accept", response_model=ChatResponse)
@@ -152,14 +152,14 @@ async def accept_relaxation(request: Request, session_id: str, index: int):
     async with deps.locks[session_id]:
         report = state.last_infeasibility
         if report is None or not (0 <= index < len(report.proposals)):
-            raise HTTPException(status_code=409, detail="Aucune proposition de relaxation à cet index")
+            raise HTTPException(status_code=409, detail="No relaxation proposal at this index")
         proposal = report.proposals[index]
-        rid = state.new_request_id(f"[relaxation acceptée] {proposal.description}")
+        rid = state.new_request_id(f"[relaxation accepted] {proposal.description}")
         merge = apply_actions(state, proposal.patch, rid)
         if merge.applied == 0:
-            raise HTTPException(status_code=422, detail="; ".join(merge.errors) or "Patch inapplicable")
+            raise HTTPException(status_code=422, detail="; ".join(merge.errors) or "Patch not applicable")
         _, diff = await _resolve_async(request, state)
-        message = f"Compromis appliqué : {proposal.description}"
+        message = f"Trade-off applied: {proposal.description}"
         state.chat_history.append(ChatTurn(who="assistant", text=message))
         deps.store.save(state)
         return _chat_response(state, message, diff)
@@ -170,11 +170,11 @@ async def export_schedule(request: Request, session_id: str, include_defaults: b
     deps = _deps(request)
     state = _get_state(request, session_id)
     if state.last_good_schedule is None or not state.last_good_schedule.blocks:
-        raise HTTPException(status_code=409, detail="Aucun planning faisable à exporter")
+        raise HTTPException(status_code=409, detail="No feasible schedule to export")
     if state.solver_status == "INFEASIBLE":
         raise HTTPException(
             status_code=409,
-            detail="Le planning courant est en conflit : résolvez-le avant d'exporter.",
+            detail="The current schedule is in conflict: resolve it before exporting.",
         )
     payload = IcsExporter().export(state.last_good_schedule, state.session_id, include_defaults)
     state.validated_at = datetime.now(timezone.utc)

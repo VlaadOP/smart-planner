@@ -22,7 +22,7 @@ def validate_schedule(schedule: Schedule, cm: CompiledModel, grid: TimeGrid) -> 
     ordered = sorted(slots.items(), key=lambda kv: kv[1][0])
     for (k1, (s1, e1)), (k2, (s2, e2)) in zip(ordered, ordered[1:]):
         if s2 < e1:
-            violations.append(f"overlap: {k1} [{s1},{e1}) chevauche {k2} [{s2},{e2})")
+            violations.append(f"overlap: {k1} [{s1},{e1}) overlaps {k2} [{s2},{e2})")
 
     chunks_by_key = {c.key: c for c in cm.chunks}
 
@@ -31,17 +31,17 @@ def validate_schedule(schedule: Schedule, cm: CompiledModel, grid: TimeGrid) -> 
         if not (c.required_presence and c.strength == Strength.HARD):
             continue
         if c.key not in slots:
-            violations.append(f"missing: {c.label} ({c.key}) absent du planning")
+            violations.append(f"missing: {c.label} ({c.key}) absent from schedule")
             continue
         s, e = slots[c.key]
         size = e - s
         if c.fixed_start is not None and s != c.fixed_start:
-            violations.append(f"misplaced: {c.label} ({c.key}) à {s}, attendu {c.fixed_start}")
+            violations.append(f"misplaced: {c.label} ({c.key}) at {s}, expected {c.fixed_start}")
         if not (c.min_size <= size <= c.max_size):
-            violations.append(f"size: {c.label} ({c.key}) taille {size} hors [{c.min_size},{c.max_size}]")
+            violations.append(f"size: {c.label} ({c.key}) size {size} outside [{c.min_size},{c.max_size}]")
         if c.fixed_start is None and c.windows is not None:
             if not any(s >= a and e <= b for a, b in c.windows):
-                violations.append(f"window: {c.label} ({c.key}) [{s},{e}) hors fenêtres autorisées")
+                violations.append(f"window: {c.label} ({c.key}) [{s},{e}) outside allowed windows")
 
     # 3. Groupes HARD : somme des tailles et comptes
     for g in cm.groups:
@@ -67,7 +67,7 @@ def validate_schedule(schedule: Schedule, cm: CompiledModel, grid: TimeGrid) -> 
             for a, b in bo.ranges:
                 if s < b and e > a:
                     violations.append(
-                        f"blackout: {spec.label} ({key}) [{s},{e}) dans zone interdite [{a},{b}) de {bo.label}"
+                        f"blackout: {spec.label} ({key}) [{s},{e}) in forbidden zone [{a},{b}) of {bo.label}"
                     )
 
     # 5. MaxStretch HARD
@@ -79,10 +79,10 @@ def validate_schedule(schedule: Schedule, cm: CompiledModel, grid: TimeGrid) -> 
         )
         for s, e in cat_blocks:
             if e - s > st.max_slots:
-                violations.append(f"stretch: bloc {st.category.value} de {e - s} slots > {st.max_slots}")
+                violations.append(f"stretch: {st.category.value} block of {e - s} slots > {st.max_slots}")
         for (s1, e1), (s2, e2) in zip(cat_blocks, cat_blocks[1:]):
             if s2 - e1 < st.gap_slots and s2 >= e1:
                 violations.append(
-                    f"stretch-gap: blocs {st.category.value} séparés de {s2 - e1} < {st.gap_slots} slots"
+                    f"stretch-gap: {st.category.value} blocks separated by {s2 - e1} < {st.gap_slots} slots"
                 )
     return violations

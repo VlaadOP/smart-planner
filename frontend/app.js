@@ -36,11 +36,11 @@ function setStatus(text) {
 
 function statusLabel(view) {
   const map = {
-    OPTIMAL: "Planning optimal",
-    FEASIBLE: "Planning faisable",
-    INFEASIBLE: "⚠️ Contraintes en conflit — dernier planning valide affiché",
-    UNKNOWN: "En attente de contraintes…",
-    TOO_LARGE: "⚠️ Modèle trop volumineux",
+    OPTIMAL: "Optimal schedule",
+    FEASIBLE: "Feasible schedule",
+    INFEASIBLE: "⚠️ Conflicting constraints — showing last valid schedule",
+    UNKNOWN: "Waiting for constraints…",
+    TOO_LARGE: "⚠️ Model too large",
   };
   return (map[view.solver_status] || view.solver_status) +
     ` · session ${view.session_id} · ${view.horizon_start} → ${view.horizon_end}`;
@@ -52,7 +52,7 @@ function initCalendar(view) {
   calendar = new FullCalendar.Calendar($("calendar"), {
     initialView: "timeGridWeek",
     initialDate: view.horizon_start,
-    locale: "fr",
+    locale: "en",
     firstDay: 1,
     allDaySlot: false,
     slotDuration: "00:15:00",
@@ -122,10 +122,10 @@ function renderConstraints(constraints) {
     const li = document.createElement("li");
     if (c.is_default) li.classList.add("default");
     const badges = [];
-    if (c.is_default) badges.push('<span class="badge default">défaut</span>');
-    badges.push(`<span class="badge ${c.strength === "hard" ? "hard" : ""}">${c.strength === "hard" ? "dur" : "souple " + c.weight}</span>`);
+    if (c.is_default) badges.push('<span class="badge default">default</span>');
+    badges.push(`<span class="badge ${c.strength === "hard" ? "hard" : ""}">${c.strength === "hard" ? "hard" : "soft " + c.weight}</span>`);
     li.innerHTML = `${badges.join("")}<span class="lbl" title="${escapeHtml(c.summary)}">${escapeHtml(c.label)}</span>` +
-      `<button class="del" title="Supprimer">✕</button>`;
+      `<button class="del" title="Delete">✕</button>`;
     li.querySelector(".del").addEventListener("click", () => deleteConstraint(c.id, c.label));
     ul.appendChild(li);
   }
@@ -166,7 +166,7 @@ function applyView(view, diff) {
 
 async function sendMessage(text) {
   appendMessage("user", text);
-  const pending = appendMessage("assistant", "…réflexion en cours…", true);
+  const pending = appendMessage("assistant", "…thinking…", true);
   $("chat-send").disabled = true;
   try {
     const res = await api(`/api/sessions/${sessionId}/chat`, {
@@ -179,7 +179,7 @@ async function sendMessage(text) {
     applyView({ ...data, session_id: sessionId, horizon_start: window._hzStart, horizon_end: window._hzEnd }, data.diff);
   } catch (err) {
     pending.remove();
-    appendMessage("assistant", `Erreur : ${err.message}`);
+    appendMessage("assistant", `Error: ${err.message}`);
   } finally {
     $("chat-send").disabled = false;
     $("chat-input").focus();
@@ -187,7 +187,7 @@ async function sendMessage(text) {
 }
 
 async function deleteConstraint(id, label) {
-  if (!confirm(`Supprimer la contrainte « ${label} » ?`)) return;
+  if (!confirm(`Delete the constraint “${label}”?`)) return;
   try {
     const res = await api(`/api/sessions/${sessionId}/constraints/${id}`, { method: "DELETE" });
     const data = await res.json();
@@ -221,9 +221,9 @@ async function exportIcs() {
     a.download = "smart-planner.ics";
     a.click();
     URL.revokeObjectURL(url);
-    setStatus("Planning validé et exporté en .ics ✔");
+    setStatus("Schedule validated and exported as .ics ✔");
   } catch (err) {
-    alert(`Export impossible : ${err.message}`);
+    alert(`Export failed: ${err.message}`);
   }
 }
 
@@ -250,9 +250,9 @@ async function loadOrCreateSession(forceNew = false) {
   if (!(view.chat_history || []).length) {
     appendMessage(
       "assistant",
-      "Bonjour ! Décrivez vos contraintes (« réunion fixe mardi à 14h », « 1h de pause par jour », " +
-      "« 10h de sommeil »...) et je construis votre planning du mois. Des défauts réalistes " +
-      "(sommeil, repas...) sont déjà en place — dites-le-moi pour les changer."
+      "Hi! Describe your constraints (\"fixed meeting Tuesday at 2pm\", \"1h break per day\", " +
+      "\"10h of sleep\"...) and I'll build your monthly schedule. Realistic defaults " +
+      "(sleep, meals...) are already in place — just tell me to change them."
     );
   }
   applyView(view, null);
@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   $("btn-export").addEventListener("click", exportIcs);
   $("btn-new-session").addEventListener("click", () => {
-    if (confirm("Repartir d'une session vierge ?")) loadOrCreateSession(true);
+    if (confirm("Start a new blank session?")) loadOrCreateSession(true);
   });
-  loadOrCreateSession().catch((err) => setStatus(`Erreur d'initialisation : ${err.message}`));
+  loadOrCreateSession().catch((err) => setStatus(`Initialization error: ${err.message}`));
 });
